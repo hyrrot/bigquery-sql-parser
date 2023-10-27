@@ -1,0 +1,29 @@
+
+1.
+https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax#sql_syntax
+
+query_expr:
+  [ WITH [ RECURSIVE ] { non_recursive_cte | recursive_cte }[, ...] ]
+  { select | ( query_expr ) | set_operation }
+  [ ORDER BY expression [{ ASC | DESC }] [, ...] ]
+  [ LIMIT count [ OFFSET skip_rows ] ]
+
+set_operation:
+  query_expr set_operator query_expr
+
+上記となっているが、BQは以下のクエリを許容しない。
+
+WITH t1 AS ( SELECT 1 AS c )
+SELECT * FROM t1
+UNION ALL
+WITH t2 AS ( SELECT 2 AS c )
+SELECT * FROM t2
+
+以下のように書くとBQは許容する。このパーサはBQの実際の仕様に従い、上記のようなクエリを許容せず、以下のようなクエリを許容する。
+
+WITH t1 AS ( SELECT 1 AS c )
+, t2 AS ( SELECT 2 AS c )
+SELECT * FROM t1
+UNION ALL
+SELECT * FROM t2
+
