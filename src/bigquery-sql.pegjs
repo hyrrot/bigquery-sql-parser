@@ -118,14 +118,42 @@ from_item_without_join =
     / cte_name _ ( as_alias )?
 
 
+// TODO: fix this
+field_path = [a-zA-Z\.]+
+
+// TODO: fix this
+cte_name = [a-zA-Z]+
+
 as_alias =
     ( K_AS )? _ alias
 
 unnest_operator =
-    ( K_UNNEST _ LPAREN _ array_expression _ RPAREN / K_UNNEST _ LPAREN _ array_path _ RPAREN / array_path ) _ ( as_alias )? _ ( K_WITH _ K_OFFSET _ ( as_alias )? )?
+    ( K_UNNEST _ LPAREN _ array_expression _ RPAREN 
+    / K_UNNEST _ LPAREN _ array_path _ RPAREN 
+    / array_path ) 
+    _ ( as_alias )? 
+    _ ( K_WITH _ K_OFFSET _ ( as_alias )? )?
+
+// TODO: fix this
+array_path = "a.ary"
+
+// TODO: fix this
+array_expression = "[1,2,3]"
 
 pivot_operator =
     K_PIVOT _ LPAREN _ aggregate_function_call _ ( as_alias )? _ ( COMMA _ /* TODO ELLIPSIS */  )? _ K_FOR _ input_column _ K_IN _ LPAREN _ pivot_column _ ( as_alias )? _ ( COMMA _ /* TODO ELLIPSIS */  )? _ RPAREN _ RPAREN _ ( K_AS _ alias )?
+
+// TODO: fix this
+aggregate_function_call =
+    "SUM(sales)"
+
+// TODO: fix this
+input_column =
+    "col"
+
+// TODO: fix this
+pivot_column = "'Q1'"
+
 
 // https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax#unpivot_operator
 unpivot_operator = 
@@ -137,6 +165,12 @@ single_column_unpivot =
   values_column _
   K_FOR _ name_column _
   K_IN _  LPAREN _ columns_to_unpivot _ RPAREN
+
+// TODO: fix this
+values_column = "col"
+
+// TODO: fix this
+name_column = "col"
 
 multi_column_unpivot =
   values_column_set _
@@ -151,6 +185,10 @@ join_operation =
 
 columns_to_unpivot =
   unpivot_column _ (row_value_alias|.., _ COMMA _|)?
+
+// TODO: fix this
+unpivot_column =
+  "col"
 
 column_sets_to_unpivot =
   LPAREN _ unpivot_column _ (row_value_alias|.., _ COMMA _|)? _ RPAREN
@@ -197,19 +235,29 @@ column_list =
 group_by_specification =
     ( groupable_items / grouping_sets_specification / rollup_specification / cube_specification / LPAREN_RPAREN )
 
+// TODO: fix this
+grouping_sets_specification = "(a,(b,c),d)"
+
+// TODO: fix this
+rollup_specification = "ROLLUP(a,b,c)"
+
+// TODO: fix this
+cube_specification = "(a,b,c)"
+
 groupable_items =
     // ( value / value_alias / column_ordinal )|.., _ COMMA _|
     // TODO fix this
     expression|.., _ COMMA _|
 
-grouping_list =
-    ( rollup_specification / cube_specification / groupable_item / groupable_item_set ) _ ( COMMA _ /* TODO ELLIPSIS */  )?
 
-groupable_item_set =
-    LPAREN _ ( groupable_item _ ( COMMA _ /* TODO ELLIPSIS */  )? )? _ RPAREN
+// grouping_list =
+//     ( rollup_specification / cube_specification / groupable_item / groupable_item_set )|.., _ COMMA _|
 
-grouping_list =
-    ( groupable_item / groupable_item_set ) _ ( COMMA _ /* TODO ELLIPSIS */  )?
+// groupable_item_set =
+//     LPAREN _ ( groupable_item|.., _ COMMA _| )? _ RPAREN
+
+// grouping_list =
+//     ( groupable_item / groupable_item_set ) |.., _ COMMA _|
 
 // WINDOW named_window_expression [, ...]
 // https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax#window_clause
@@ -218,6 +266,103 @@ window_clause =
 
 named_window_expression =
     named_window _ K_AS _ ( named_window / LPAREN _ ( window_specification )? _ RPAREN )
+
+// TODO: fix this
+named_window = "window_name"
+
+// window_specification:
+window_specification =
+//   [ named_window ]
+    named_window? _
+//   [ PARTITION BY partition_expression [, ...] ]
+    ( K_PARTITION _ K_BY _ partition_expression|.., _ COMMA _| )? _
+//   [ ORDER BY expression [ { ASC | DESC } ] [, ...] ]
+    ( K_ORDER _ K_BY _ expression _ ( K_ASC / K_DESC )|.., _ COMMA _| )? _
+//   [ window_frame_clause ]
+    window_frame_clause?
+
+// TODO: fix this
+partition_expression = "col"
+
+// window_frame_clause:
+window_frame_clause =
+//   { rows_range } { frame_start | frame_between }
+    rows_range _ ( frame_start / frame_between )
+
+// rows_range:
+rows_range =
+//   { ROWS | RANGE }
+    ( K_ROWS / K_RANGE ) _
+
+// frame_between:
+frame_between =
+//   {
+//     BETWEEN  unbounded_preceding AND frame_end_a
+//     | BETWEEN numeric_preceding AND frame_end_a
+//     | BETWEEN current_row AND frame_end_b
+//     | BETWEEN numeric_following AND frame_end_c
+//   }
+    K_BETWEEN _
+    (unbounded_preceding _ K_AND _ frame_end_a)
+    / (numeric_preceding _ K_AND _ frame_end_a)
+    / (current_row _ K_AND _ frame_end_b)
+
+// frame_start:
+frame_start =
+//   { unbounded_preceding | numeric_preceding | [ current_row ] }
+    unbounded_preceding
+    / numeric_preceding
+    / current_row?
+
+// frame_end_a:
+frame_end_a =
+//   { numeric_preceding | current_row | numeric_following | unbounded_following }
+    numeric_preceding
+    / current_row
+    / numeric_following
+    / unbounded_following
+
+// frame_end_b:
+frame_end_b =
+//   { current_row | numeric_following | unbounded_following }
+    current_row
+    / numeric_following
+    / unbounded_following
+
+// frame_end_c:
+frame_end_c =
+//   { numeric_following | unbounded_following }
+    numeric_following
+    / unbounded_following
+
+// unbounded_preceding:
+unbounded_preceding =
+//   UNBOUNDED PRECEDING
+    K_UNBOUNDED _ K_PRECEDING
+
+// numeric_preceding:
+numeric_preceding =
+//   numeric_expression PRECEDING
+    numeric_expression _ K_PRECEDING
+
+// TODO fix this
+numeric_expression =
+    expression
+
+// unbounded_following:
+unbounded_following =
+//   UNBOUNDED FOLLOWING
+    K_UNBOUNDED _ K_FOLLOWING
+
+// numeric_following:
+numeric_following =
+//   numeric_expression FOLLOWING
+    numeric_expression _ K_FOLLOWING
+
+// current_row:
+current_row =
+//   CURRENT ROW
+    K_CURRENT _ K_ROW
 
 // set_operation =
 //     query_expr_without_cte _ set_operator _ query_expr_without_cte
@@ -271,12 +416,15 @@ timestamp_expression = "1"i
 // Define keywords
 
 _ "WHITESPACE" =
-    [\t\n\r]*
+    [ \t\n\r]*
 
+K_AND = 'AND'i
 K_ALL = 'ALL'i
 K_AS = 'AS'i
 K_ASC = 'ASC'i
+K_BETWEEN = 'BETWEEN'i
 K_BY = 'BY'i
+K_CURRENT = 'CURRENT'i
 K_CROSS = 'CROSS'i
 K_DESC = 'DESC'i
 K_DIFFERENTIAL_PRIVACY = 'DIFFERENTIAL_PRIVACY'i
@@ -284,6 +432,7 @@ K_DISTINCT = 'DISTINCT'i
 K_EXCEPT = 'EXCEPT'i
 K_EXCLUDE = 'EXCLUDE'i
 K_FOR = 'FOR'i
+K_FOLLOWING = 'FOLLOWING'i
 K_FROM = 'FROM'i
 K_FULL = 'FULL'i
 K_GROUP = 'GROUP'i
@@ -302,17 +451,23 @@ K_ON = 'ON'i
 K_OPTIONS = 'OPTIONS'i
 K_ORDER = 'ORDER'i
 K_OUTER = 'OUTER'i
+K_PARTITION = 'PARTITION'i
 K_PERCENT = 'PERCENT'i
+K_PRECEDING = 'PRECEDING'i
 K_PIVOT = 'PIVOT'i
 K_QUALIFY = 'QUALIFY'i
+K_RANGE = 'RANGE'i
 K_RECURSIVE = 'RECURSIVE'i
 K_REPLACE = 'REPLACE'i
+K_ROW = 'ROW'i
+K_ROWS = "ROWS"i
 K_RIGHT = 'RIGHT'i
 K_SELECT = 'SELECT'i
 K_STRUCT = 'STRUCT'i
 K_SYSTEM = 'SYSTEM'i
 K_SYSTEM_TIME = "SYSTEM_TIME"i
 K_TABLESAMPLE = 'TABLESAMPLE'i
+K_UNBOUNDED = 'UNBOUNDED'i
 K_UNION = 'UNION'i
 K_UNNEST = 'UNNEST'i
 K_UNPIVOT = 'UNPIVOT'i
