@@ -8,7 +8,7 @@ query_expr =
     ( K_WITH _ K_RECURSIVE? _ ( non_recursive_cte / recursive_cte ) |.., _ COMMA _| )? _
 
     // * See 1. in limitations.txt
-    query_expr_02 |.., _ set_operator _ query_expr_02|
+    query_expr_02 |1.., _ set_operator _ query_expr_02|
 
 
 // Level 2: SELECT, ORDER, LIMIT
@@ -45,7 +45,7 @@ select =
     select_list _
     
     // [ FROM from_clause[, ...] ]
-    ( K_FROM _ from_clause|.., _ COMMA _| )? _
+    ( K_FROM _ from_clause|1.., _ COMMA _| )? _
     
     // [ WHERE bool_expression ]
     ( K_WHERE _ bool_expression )? _
@@ -66,7 +66,7 @@ select =
 // https://cloud.google.com/bigquery/docs/reference/standard-sql/query-syntax#select_list
 select_list =
     // { select_all | select_expression } [, ...]
-    ( select_all / select_expression )|.., _ COMMA _|
+    ( select_all / select_expression )|1.., _ COMMA _|
 
 select_all =
     // [ expression. ]*
@@ -87,7 +87,7 @@ from_clause =
     // * Handle joins here (to avoid left recursion)
     from_item _ 
     // [ { pivot_operator | unpivot_operator } ]
-    ( ( pivot_operator / unpivot_operator ) )? _
+    ( pivot_operator / unpivot_operator )? _
     // [ tablesample_operator ]
     ( tablesample_operator )?
 

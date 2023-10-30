@@ -17,7 +17,8 @@
   "scripts": {
     "test": "jest",
     "lint": "eslint --ext .ts .",
-    "build": "./node_modules/.bin/peggy --plugin ./node_modules/ts-pegjs/dist/tspegjs --cache -m --output dist/parser.ts src/parser.pegjs && tsc"
+    "build": "./node_modules/.bin/peggy --trace --plugin ./node_modules/ts-pegjs/dist/tspegjs --cache -m --output src/parser.ts src/bigquery-sql.pegjs && tsc",
+    "start": "node dist/app.js"
   },
   "keywords": [],
   "author": "",
